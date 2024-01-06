@@ -1,0 +1,73 @@
+import java.util.Scanner;
+
+class Coindenomination extends Thread {
+    int[] coins;
+    int sum;
+    int index;
+    int result;
+
+    Coindenomination(int[] coins, int sum, int index) {
+        this.coins = coins;
+        this.sum = sum;
+        this.index = index;
+        this.result = 0;
+    }
+
+    public void run() {
+        result = count_denomination(coins, sum, index);
+    }
+
+    private static int count_denomination(int[] coins, int sum, int index) {
+        if (sum == 0) {
+            return 1;
+        }
+
+        if (sum < 0 || index < 0) {
+            return 0;
+        }
+
+        Coindenomination thread1 = new Coindenomination(coins, sum - coins[index], index);
+        Coindenomination thread2 = new Coindenomination(coins, sum, index - 1);
+
+        thread1.start();
+        thread2.start();
+
+        try {
+            thread1.join();
+            thread2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        synchronized (Coindenomination.class) {
+            return thread1.result + thread2.result;
+        }
+    }
+}
+
+public class coins {
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter the number of coins");
+        int n = input.nextInt();
+        System.out.println("Enter the sum you want to obtain:");
+        int sum = input.nextInt();
+        int[] coins = new int[n];
+        System.out.println("Enter the coins you have");
+        for (int i = 0; i < n; i++) {
+            coins[i] = input.nextInt();
+        }
+
+        Coindenomination mainThread = new Coindenomination(coins, sum, n - 1);
+        mainThread.start();
+
+        try {
+            mainThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        int totalWays = mainThread.result;
+        System.out.println("Total ways to make the sum: " + totalWays);
+    }
+}
