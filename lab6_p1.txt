@@ -1,73 +1,61 @@
-import java.util.Scanner;
+package JAVA_LAB6;
+import java.util.*;
 
-class Coindenomination extends Thread {
-    int[] coins;
-    int sum;
-    int index;
-    int result;
-
-    Coindenomination(int[] coins, int sum, int index) {
-        this.coins = coins;
-        this.sum = sum;
-        this.index = index;
-        this.result = 0;
-    }
-
-    public void run() {
-        result = count_denomination(coins, sum, index);
-    }
-
-    private static int count_denomination(int[] coins, int sum, int index) {
-        if (sum == 0) {
-            return 1;
-        }
-
-        if (sum < 0 || index < 0) {
-            return 0;
-        }
-
-        Coindenomination thread1 = new Coindenomination(coins, sum - coins[index], index);
-        Coindenomination thread2 = new Coindenomination(coins, sum, index - 1);
-
-        thread1.start();
-        thread2.start();
-
-        try {
-            thread1.join();
-            thread2.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        synchronized (Coindenomination.class) {
-            return thread1.result + thread2.result;
-        }
-    }
-}
 
 public class coins {
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws InterruptedException {
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter the number of coins");
+        System.out.print("Enter the number of coins: ");
         int n = input.nextInt();
-        System.out.println("Enter the sum you want to obtain:");
+        int[] coinsArr = new int[n];
+
+        System.out.println("Enter the sum value you want to obtain : ");
         int sum = input.nextInt();
-        int[] coins = new int[n];
-        System.out.println("Enter the coins you have");
-        for (int i = 0; i < n; i++) {
-            coins[i] = input.nextInt();
+        Thread t1 = new Thread(() -> {
+
+            synchronized (coinsArr) {
+
+                System.out.print("Enter the coins denomination: ");
+                for (int i = 0; i < n; i++) {
+                    coinsArr[i] = input.nextInt();
+                }
+
+            }
+        });
+        List<List<Integer>> v = new ArrayList<>();
+        Thread t2 = new Thread(() -> {
+            synchronized (coinsArr) {
+                combiFunction(coinsArr, sum, 0, new ArrayList<>(), v);
+            }
+        });
+
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        for (List<Integer> combination : v) {
+            System.out.println(combination);
         }
 
-        Coindenomination mainThread = new Coindenomination(coins, sum, n - 1);
-        mainThread.start();
-
-        try {
-            mainThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        int totalWays = mainThread.result;
-        System.out.println("Total ways to make the sum: " + totalWays);
     }
+
+    static void combiFunction(int[] array, int target, int start, List<Integer> current,
+                              List<List<Integer>> result) {
+        if (target == 0) {
+
+            result.add(new ArrayList<>(current));
+            return;
+        }
+
+        for (int i = start; i < array.length; i++) {
+
+            if (array[i] <= target) {
+                current.add(array[i]);
+                combiFunction(array, target - array[i], i, current, result);
+                current.remove(current.size() - 1);
+            }
+        }
+    }
+
 }
